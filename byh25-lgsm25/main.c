@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "newton.h"
 #include "utils.h"
  
@@ -9,10 +10,10 @@
  */
 int main(void)
 {
-    int n, max, nIter = 0;
+    int n, max, nIter = 0, status = NEWTON_OK;
     double x0, eps, tTotal = 0.0, tJac = 0.0, tSL = 0.0;
  
-    if (scanf("%d %lf %lf %d", &n, &x0, &eps, &max) != 4 || n < 2 || max < 0) {
+    if (scanf("%d %lf %lf %d", &n, &x0, &eps, &max) != 4 || n < 2 || max < 0 || !isfinite(x0) || !isfinite(eps) || eps < 0.0) {
         fprintf(stderr, "Entrada invalida. Esperado: N(>=2) x0 epsilon MAX\n");
         return 1;
     }
@@ -21,13 +22,19 @@ int main(void)
     LIKWID_MARKER_REGISTER("NEWTON");
     LIKWID_MARKER_REGISTER("JACOBIANA");
     LIKWID_MARKER_REGISTER("SISTEMA_LINEAR");
+
  
-    double *hist = newton(n, x0, eps, max, &nIter, &tTotal, &tJac, &tSL);
+    double *hist = newton(n, x0, eps, max, &nIter, &tTotal, &tJac, &tSL, &status);
  
     LIKWID_MARKER_CLOSE;
  
     if (!hist) {
-        fprintf(stderr, "Erro de alocacao de memoria\n");
+        if (status == NEWTON_ERRO_NUMERICO)
+            fprintf(stderr, "Falha numerica: sistema singular, pivo invalido ou resultado nao finito\n");
+        else if (status == NEWTON_ERRO_MEMORIA)
+            fprintf(stderr, "Erro de alocacao de memoria\n");
+        else
+            fprintf(stderr, "Argumentos invalidos para o Metodo de Newton\n");
         return 1;
     }
  

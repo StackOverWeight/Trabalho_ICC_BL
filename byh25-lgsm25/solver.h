@@ -1,14 +1,14 @@
 #ifndef SOLVER_H
 #define SOLVER_H
- 
+
 #include "jacobiana.h"
- 
+
 /*
- * Resolve o sistema linear tridiagonal J x = b pelo Método da Eliminação de
- * Gauss (sem pivoteamento) seguido de retrossubstituição.
- *
- * ATENÇÃO: J->d e b são modificados (triangularização feita in-place).
+ * Resolve J*x=b para J tridiagonal usando eliminação de Gauss sem
+ * pivoteamento. J e b são modificados durante a fatoração.
+ * Retorna 0 em sucesso e -1 se encontrar pivô nulo/muito pequeno ou
+ * resultado não finito.
  */
-void resolveTriDiag(TriDiag *J, double *b, double *x);
- 
+int resolveTriDiag(TriDiag *J, double *b, double *x);
+
 #endif

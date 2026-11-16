@@ -1,25 +1,53 @@
+#include <float.h>
+#include <math.h>
+#include <stddef.h>
 #include "solver.h"
- 
+
 /*
- * resolveTriDiag: Eliminação de Gauss para matrizes tridiagonais.
- *  - Triangularização: elimina a subdiagonal (apenas d[i+1] e b[i+1] mudam).
- *  - Retrossubstituição: só a superdiagonal c está acima da diagonal.
+ * resolveTriDiag: resolve o sistema tridiagonal pelo algoritmo de Thomas
+ * (eliminação de Gauss especializada), sem pivoteamento.
+ * Antes de cada divisão, verifica se o pivô é suficientemente diferente
+ * de zero em relação à escala dos coeficientes da matriz.
  */
-void resolveTriDiag(TriDiag *J, double *b, double *x)
+int resolveTriDiag(TriDiag *J, double *b, double *x)
 {
-    int n = J->n;
-    double *a = J->a, *d = J->d, *c = J->c;
- 
-    /* Triangularização */
+    const int n = J->n;
+    double *a = J->a;
+    double *d = J->d;
+    double *c = J->c;
+    double escala = 0.0;
+
+    for (int i = 0; i < n; ++i) {
+        if (!isfinite(d[i]) || !isfinite(b[i])) return -1;
+        if (fabs(d[i]) > escala) escala = fabs(d[i]);
+    }
     for (int i = 0; i < n - 1; ++i) {
-        double m = a[i] / d[i];
-        a[i] = 0.0;
+        if (!isfinite(a[i]) || !isfinite(c[i])) return -1;
+        if (fabs(a[i]) > escala) escala = fabs(a[i]);
+        if (fabs(c[i]) > escala) escala = fabs(c[i]);
+    }
+
+    /* Matriz nula ou pivô indistinguível de zero em precisão double. */
+    const double limite = 16.0 * DBL_EPSILON * escala;
+
+    /* Eliminação para triangularizar a matriz. */
+    for (int i = 0; i < n - 1; ++i) {
+        if (fabs(d[i]) <= limite) return -1;
+        const double m = a[i] / d[i];
         d[i + 1] -= c[i] * m;
         b[i + 1] -= b[i] * m;
+        if (!isfinite(d[i + 1]) || !isfinite(b[i + 1])) return -1;
     }
- 
-    /* Retrossubstituição */
+
+    /* Retrossubstituição. */
+    if (fabs(d[n - 1]) <= limite) return -1;
     x[n - 1] = b[n - 1] / d[n - 1];
-    for (int i = n - 2; i >= 0; --i)
+    if (!isfinite(x[n - 1])) return -1;
+
+    for (int i = n - 2; i >= 0; --i) {
+        if (fabs(d[i]) <= limite) return -1;
         x[i] = (b[i] - c[i] * x[i + 1]) / d[i];
+        if (!isfinite(x[i])) return -1;
+    }
+    return 0;
 }

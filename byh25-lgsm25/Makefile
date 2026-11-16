@@ -1,4 +1,3 @@
-e
 CC      = gcc
 CFLAGS  = -O3 -march=native -mavx -fopt-info-vec
 LDLIBS  = -lm

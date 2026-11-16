@@ -1,22 +1,20 @@
 #ifndef NEWTON_H
 #define NEWTON_H
- 
+
+/* Códigos de resultado da execução do Método de Newton. */
+enum {
+    NEWTON_OK = 0,
+    NEWTON_ERRO_MEMORIA = 1,
+    NEWTON_ERRO_ARGUMENTO = 2,
+    NEWTON_ERRO_NUMERICO = 3
+};
+
 /*
- * Método de Newton para o SNLB de Broyden.
- *
- * Parâmetros:
- *   n, x0, eps, max : dimensão, valor inicial (igual p/ todas as variáveis),
- *                     tolerância e número máximo de iterações
- *   nIter           : (saída) número de iterações efetivamente realizadas
- *   tTotal          : (saída) tempo total do método (ms)
- *   tJac            : (saída) soma dos tempos de cálculo das Jacobianas (ms)
- *   tSL             : (saída) soma dos tempos de resolução dos sistemas lineares (ms)
- *
- * Retorno: histórico das iterações, matriz (nIter+1) x n em row-major
- *          (linha k = X^(k)). O chamador deve liberar com free().
- *          Retorna NULL em caso de erro de alocação.
+ * Executa o Método de Newton para o SNLB de Broyden.
+ * Retorna o histórico (nIter+1) x n em row-major; o chamador libera com free().
+ * Em caso de falha retorna NULL e informa o motivo em status.
  */
 double *newton(int n, double x0, double eps, int max, int *nIter,
-               double *tTotal, double *tJac, double *tSL);
- 
+               double *tTotal, double *tJac, double *tSL, int *status);
+
 #endif
